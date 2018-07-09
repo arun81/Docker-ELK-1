@@ -1,0 +1,20 @@
+#-------------------------- Filebeat Prospectors -------------------------------#
+filebeat:
+  prospectors:
+    -
+      paths:
+        - /var/log/*
+      input_type: log
+      document_type: filebeat-log
+      scan_frequency: 5s
+
+#----------------------------- Logstash output ---------------------------------#
+output.logstash:
+  hosts: ["{{LOGSTASH_HOST}}:{{LOGSTASH_PORT}}"]
+
+#--------------------------------- Logging -------------------------------------#
+logging:
+  files:
+    rotateeverybytes: 10485760 # = 10MB
+  selectors: ["*"]
+  level: warning
