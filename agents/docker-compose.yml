@@ -1,0 +1,60 @@
+####################################################################################################
+version: '2'
+#
+# Rede
+#
+networks:
+  elk:
+    driver: bridge
+
+# Serviços ELK
+#
+services:
+#
+# O Filebeat é responsável por ler os arquivos de log e enviar para o logstash.
+#
+  filebeat:
+    build:
+      context: filebeat/
+    privileged: true
+    hostname: filebeat
+    container_name: filebeat
+    restart: unless-stopped
+    volumes:
+      - ./filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/logs-docker-containers
+    environment:
+      LOGSTASH_HOST: "logstash"
+      LOGSTASH_PORT: "5044"
+      KIBANA_HOST: "kibana"
+      KIBANA_PORT: "5601"
+    networks:
+      - elk
+    extra_hosts:
+      - "kibana:172.25.0.39"      
+      - "logstash:172.25.0.39"
+      - "elasticsearch:172.25.0.39"
+#
+# O Metricbeat é responsável por usa as métricas e estatísticas que coleta e envia para a saída especificada, como Elasticsearch ou Logstash
+#
+#  metricbeat:
+#    build:
+#      context: metricbeat/
+#    privileged: true
+#    hostname: metricbeat
+#    container_name: metricbeat
+#    restart: unless-stopped
+#    volumes:
+#      - ./metricbeat/config/metricbeat.yml:/etc/metricbeat/metricbeat.yml
+#    environment:
+#      LOGSTASH_HOST: "logstash"
+#      LOGSTASH_PORT: "5044"
+#      KIBANA_HOST: "kibana"
+#      KIBANA_PORT: "5601"
+#    networks:
+#      - elk
+#    extra_hosts:
+#      - "kibana:172.25.0.39"
+#      - "logstash:172.25.0.39"
+#      - "elasticsearch:172.25.0.39"
+####################################################################################################

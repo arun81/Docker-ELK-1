@@ -1,0 +1,25 @@
+#---------------------------- Filebeat Prospectors ---------------------------#
+filebeat.inputs:
+- type: docker
+  containers:
+    path: "/var/logs-docker-containers"
+    ids:
+      - "*"
+  document_type: log
+  tags: ["containers-logs"]
+  scan_frequency: 10s  
+  exclude_files: ['\.gz$']
+#--------------------------------- Processors --------------------------------#
+processors:
+- add_docker_metadata: ~
+
+processors:
+- add_host_metadata:
+   netinfo.enabled: true
+#------------------------------ Logstash Output ------------------------------#
+output.logstash:
+  hosts: ["${LOGSTASH_HOST}:${LOGSTASH_PORT}"]
+  index: 'filebeat-%{yyyy.MM.dd}'
+#------------------------------- Setup Kibana --------------------------------#
+setup.kibana:
+  host: "${KIBANA_HOST}:${KIBANA_PORT}"

@@ -78,51 +78,11 @@ services:
       - "9600:9600"
       - "12201:12201/udp"
     environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
       ELASTICSEARCH_HOST: "elasticsearch"
       ELASTICSEARCH_PORT: "9200"
     networks:
       - elk
     depends_on:
       - elasticsearch
-#
-# O Filebeat é responsável por ler os arquivos de log e enviar para o logstash.
-#
-  filebeat:
-    build:
-      context: filebeat/
-    privileged: true
-    hostname: filebeat
-    container_name: filebeat
-    restart: unless-stopped
-    volumes:
-      - ./filebeat/config/filebeat.yml:/filebeat.yml
-    environment:
-      LOGSTASH_HOST: "logstash"
-      LOGSTASH_PORT: "5044"
-    networks:
-      - elk
-    depends_on:
-      - logstash
-#
-# O Metricbeat é responsável por usa as métricas e estatísticas que coleta e envia para a saída especificada, como Elasticsearch ou Logstash
-#
-  metricbeat:
-    build:
-      context: metricbeat/
-    privileged: true
-    hostname: metricbeat
-    container_name: metricbeat
-    restart: unless-stopped
-    volumes:
-      - ./metricbeat/config/metricbeat.yml:/etc/metricbeat/metricbeat.yml
-    environment:
-      LOGSTASH_HOST: "logstash"
-      LOGSTASH_PORT: "5044"
-      KIBANA_HOST: "kibana"
-      KIBANA_PORT: "5601"
-    networks:
-      - elk
-    depends_on:
-      - logstash
 ####################################################################################################

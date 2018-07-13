@@ -19,11 +19,11 @@ metricbeat.modules:
   period: 10s
   processes: ['.*']
   cpu_ticks: false
-
 #----------------------------- Logstash output --------------------------------#
 output.logstash:
+  enabled: true
   hosts: ["{{LOGSTASH_HOST}}:{{LOGSTASH_PORT}}"]
-
+  index: "metricbeat-%{yyyy.MM.dd}"
 #----------------------------- Setup Kibana -----------------------------------#
 setup.kibana:
   host: "{{KIBANA_HOST}}:{{KIBANA_PORT}}"
