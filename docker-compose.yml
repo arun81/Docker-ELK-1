@@ -75,8 +75,6 @@ services:
       - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     ports:
       - "5044:5044"
-      - "9600:9600"
-      - "12201:12201/udp"
     environment:
       LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
       ELASTICSEARCH_HOST: "elasticsearch"

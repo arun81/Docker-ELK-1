@@ -3,7 +3,7 @@ sudo: required
 language: generic
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.14.0
+  - DOCKER_COMPOSE_VERSION=1.17.0
 
 install:
   # Installing docker
@@ -22,13 +22,3 @@ before_script:
   # Check docker & docker-compose versions
   - docker --version
   - docker-compose --version
-
-script:
-  - docker-compose build
-  - docker-compose up -d
-
-  # Verifications
-  - sleep 30
-  - docker-compose logs
-  - curl --retry 10 --retry-delay 5 -D- http://localhost:9200/
-  - curl --retry 10 --retry-delay 5 -D- http://localhost:5601/api/status
