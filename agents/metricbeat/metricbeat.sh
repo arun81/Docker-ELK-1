@@ -1,9 +1,4 @@
 #!/bin/bash
-#
-#
-# Este script realiza toda a configuração necessária para a disponibilização de uma instância do metricbeat
-#
-#
 
 if [[ $UID != 0 ]]; then
     tput setaf 3
@@ -29,10 +24,14 @@ installMetricbeat() {
   echo
   echo "Renomeando o arquivo metricbeat.yml"
   echo
-  mv -v /etc/metricbeat/metricbeat.yml /etc/metricbeat/metricbeat.yml.original
+  mv -v /etc/metricbeat/metricbeat.yml /etc/metricbeat/metricbeat.yml.default
   echo
   echo "Movendo o arquivo metricbeat.yml disponibilizado na instalação."
   mv -v metricbeat.yml /etc/metricbeat/metricbeat.yml
+  echo
+  echo "Habilitando módulo..."
+  mv -v /etc/metricbeat/modules.d/system.yml /etc/metricbeat/modules.d/system.yml
+  mv -v /etc/metricbeat/modules.d/docker.yml /etc/metricbeat/modules.d/docker.yml
   echo
   echo "Removendo o arquivo metricbeat-6.3.1-amd64.deb utilizado na instalação..."
   rm -f metricbeat-6.3.1-amd64.deb
@@ -57,7 +56,7 @@ unistallMetricbeat() {
   echo
   echo "Removendo o serviço metricbeat..."
   dpkg -P metricbeat
-  rm -rf /etc/metricbeat
+  rm -rvf /etc/metricbeat
   echo
   tput setaf 2
   echo "---------------------------------------------------------------------------"

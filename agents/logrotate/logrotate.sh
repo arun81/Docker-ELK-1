@@ -32,7 +32,7 @@ configLogrotate() {
 	  copytruncate
 	  delaycompress
 	}
-	' /etc/logrotate.d/docker-container
+	' >> /etc/logrotate.d/docker-container
   echo
   tput setaf 3
   echo "-----------------------------------------------------"

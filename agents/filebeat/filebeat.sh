@@ -1,9 +1,4 @@
 #!/bin/bash
-#
-#
-# Este script realiza toda a configuração necessária para a disponibilização de uma instância do filebeat
-#
-#
 
 if [[ $UID != 0 ]]; then
     tput setaf 3
@@ -29,7 +24,7 @@ installFilebeat() {
   echo
   echo "Renomeando o arquivo filebeat.yml"
   echo
-  mv -v /etc/filebeat/filebeat.yml /etc/filebeat/filebeat.yml.original
+  mv -v /etc/filebeat/filebeat.yml /etc/filebeat/filebeat.yml.default
   echo
   echo "Movendo o arquivo filebeat.yml disponibilizado na instalação."
   mv -v filebeat.yml /etc/filebeat/filebeat.yml
@@ -57,7 +52,7 @@ unistallFilebeat() {
   echo
   echo "Removendo o serviço filebeat..."
   dpkg -P filebeat
-  rm -rf /etc/filebeat
+  rm -rvf /etc/filebeat
   echo
   tput setaf 2
   echo "---------------------------------------------------------------------------"

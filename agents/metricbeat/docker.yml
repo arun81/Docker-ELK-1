@@ -1,0 +1,18 @@
+- module: docker
+  hosts: ["unix:///var/run/docker.sock"]
+  
+  metricsets:
+    - "container"
+    - "cpu"
+    - "diskio"
+    - "healthcheck"
+    - "info"
+    - "image"
+    - "memory"
+    - "network"
+    
+  period: 10s
+  enabled: true
+  
+  # Replace dots in labels with `_`. Set to false to keep dots
+  labels.dedot: true

@@ -28,7 +28,7 @@
 # Cluster name identifies your cluster for auto-discovery. If you're running
 # multiple clusters on the same network, make sure you're using unique names.
 #
-cluster.name: "${CLUSTER_NAME:-elasticsearch-cluster}"
+cluster.name: "${CLUSTER_NAME}"
 
 #################################### Node #####################################
 
@@ -59,8 +59,8 @@ node.name: "${HOSTNAME}"
 # 2. You want this node to only serve as a master: to not store any data and
 #    to have free resources. This will be the "coordinator" of your cluster.
 #
-# node.master: true
-# node.data: false
+#node.master: true
+#node.data: false
 #
 # 3. You want this node to be neither master nor data node, but
 #    to act as a "search load balancer" (fetching data from nodes,
@@ -280,7 +280,7 @@ discovery.zen.ping_timeout: 10s
 #    to perform discovery when new nodes (master or data) are started:
 #
 # discovery.zen.ping.unicast.hosts: ["host1", "host2:port"]
-#discovery.zen.ping.unicast.hosts: "${CLUSTER_NAME:-elasticsearch-cluster}"
+discovery.zen.ping.unicast.hosts: "${CLUSTER_NAME:-elasticsearch-cluster}"
 
 # EC2 discovery allows to use AWS EC2 API in order to perform discovery.
 #
