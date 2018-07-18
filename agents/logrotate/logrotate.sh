@@ -24,7 +24,6 @@ configLogrotate() {
 	'
 	/var/lib/docker/containers/*/*.log {
 	  daily
-	  dateext
 	  rotate 2
 	  compress
 	  missingok
