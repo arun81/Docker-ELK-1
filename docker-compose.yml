@@ -1,33 +1,43 @@
 ####################################################################################################
-version: '3.6'
+version: '3'
 #
 # Rede
 #
-networks:
-  elk:
-    driver: bridge
-
+#networks:
+#  bridge:
+#    external:
+#      name: elk
 # Serviços ELK
 #
 services:
 #
 # O Elasticsearch é o servidor de busca distribuido que irá armazenar os logs.
 #
-  elasticsearch:
+  elasticsearch-master:
     build:
       context: elasticsearch/
-    privileged: true
-    hostname: elasticsearch
-    container_name: elasticsearch
-    restart: unless-stopped
-    volumes:
-      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    hostname: elasticsearch-master
+#    volumes:
+#      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "9200"
+      - "9300"
     environment:
+      node.name: elasticsearch-master
+      node.master: "true"
+      node.data: "false"
+      node.ingest: "false"
+      cluster.name: elasticsearch-cluster
+      network.host: 0.0.0.0
+      discovery.zen.ping.unicast.hosts: elasticsearch-master,elasticsearch-data
+      discovery.zen.minimum_master_nodes: 2
+      xpack.security.enabled: "false"
+      path.data: /usr/share/elasticsearch/data
+      path.logs: /usr/share/elasticsearch/logs
+      MAX_LOCKED_MEMORY: unlimited
       ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-      CLUSTER_NAME: "elasticsearch-cluster"
+#    networks:
+#      - elk
     ulimits:
       memlock:
         soft: -1
@@ -35,39 +45,92 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    networks:
-      - elk
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 3.4G
+        reservations:
+          memory: 3.4G
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        delay: 30s
+      placement:
+        constraints: [node.role == manager]
+
+  elasticsearch-data:
+    build:
+      context: elasticsearch/
+    hostname: elasticsearch-data
+    ports:
+      - "9200"
+      - "9300"
+#    volumes:
+#      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    environment:
+      node.name: elasticsearch-data
+      node.master: "false"
+      node.data: "true"
+      node.ingest: "true"
+      cluster.name: elasticsearch-cluster
+      network.host: 0.0.0.0
+      discovery.zen.ping.unicast.hosts: elasticsearch-master,elasticsearch-data
+      discovery.zen.minimum_master_nodes: 2
+      xpack.security.enabled: "false"
+      path.data: /usr/share/elasticsearch/data
+      path.logs: /usr/share/elasticsearch/logs
+      MAX_LOCKED_MEMORY: unlimited
+      ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
+#    networks:
+#      - elk
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 3.4G
+        reservations:
+          memory: 3.4G
+      update_config:
+        parallelism: 1
+        delay: 10s      
+      restart_policy:
+        delay: 30s
+      placement:
+        constraints: [node.role == worker]
 #
 # O Kibana permite a criação de vizualizações e dashboards baseadas em buscas realizadas no elasticsearch.
 #
   kibana:
     build:
       context: kibana/
-    privileged: true
     hostname: kibana
-    container_name: kibana
-    restart: unless-stopped
     volumes:
       - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
     environment:
-      ELASTICSEARCH_HOST: "elasticsearch"
+      ELASTICSEARCH_HOST: "elasticsearch-master"
       ELASTICSEARCH_PORT: "9200"
     ports:
       - "5601:5601"
-    networks:
-      - elk
+#    networks:
+#      - elk
     depends_on:
-      - elasticsearch
+      - elasticsearch-master
 #
 # O Logstash é o responsável por parsear os logs e enviar para o elasticsearch.
 #
   logstash:
     build:
       context: logstash/
-    privileged: true
     hostname: logstash
-    container_name: logstash
-    restart: unless-stopped
     command: logstash -f /usr/share/logstash/pipeline/logstash.conf
     volumes:
       - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
@@ -77,10 +140,10 @@ services:
       - "5044:5044"
     environment:
       LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-      ELASTICSEARCH_HOST: "elasticsearch"
+      ELASTICSEARCH_HOST: "elasticsearch-master"
       ELASTICSEARCH_PORT: "9200"
-    networks:
-      - elk
+#    networks:
+#      - elk
     depends_on:
-      - elasticsearch
+      - elasticsearch-master
 ####################################################################################################

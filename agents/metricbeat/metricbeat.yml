@@ -12,11 +12,15 @@ metricbeat.config.modules:
   # Period on which files under path should be checked for changes
   reload.period: 10s
 
+  # Maximum amount of time to randomly delay the start of a metricset. Use 0 to
+  # disable startup delay.
+  metricbeat.max_start_delay: 10s
+
 #==================== Elasticsearch template setting ==========================
 
-setup.template.settings:
-  index.number_of_shards: 1
-  index.codec: best_compression
+#setup.template.settings:
+  #index.number_of_shards: 1
+  #index.codec: best_compression
   #_source.enabled: false
 
 #================================ General =====================================
