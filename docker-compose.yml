@@ -3,147 +3,147 @@ version: '3'
 #
 # Rede
 #
-#networks:
-#  bridge:
-#    external:
-#      name: elk
+networks:
+    elk:
 # Serviços ELK
 #
 services:
 #
 # O Elasticsearch é o servidor de busca distribuido que irá armazenar os logs.
 #
-  elasticsearch-master:
-    build:
-      context: elasticsearch/
-    hostname: elasticsearch-master
-#    volumes:
-#      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+  elasticsearch_master:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.1
+    hostname: elasticsearch_master
     ports:
-      - "9200"
-      - "9300"
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     environment:
-      node.name: elasticsearch-master
+      node.name: elasticsearch_master
       node.master: "true"
       node.data: "false"
-      node.ingest: "false"
-      cluster.name: elasticsearch-cluster
       network.host: 0.0.0.0
-      discovery.zen.ping.unicast.hosts: elasticsearch-master,elasticsearch-data
+      cluster.name: elasticsearch_cluster
       discovery.zen.minimum_master_nodes: 2
-      xpack.security.enabled: "false"
-      path.data: /usr/share/elasticsearch/data
-      path.logs: /usr/share/elasticsearch/logs
+      discovery.zen.ping.unicast.hosts: elasticsearch_master
+      discovery.zen.ping_timeout: 30s
       MAX_LOCKED_MEMORY: unlimited
       ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-#    networks:
-#      - elk
     ulimits:
       memlock:
         soft: -1
         hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
     deploy:
       replicas: 2
-      resources:
-        limits:
-          memory: 3.4G
-        reservations:
-          memory: 3.4G
       update_config:
         parallelism: 1
         delay: 10s
       restart_policy:
-        delay: 30s
-      placement:
-        constraints: [node.role == manager]
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+#      placement:
+#        constraints: [node.role == manager]
 
-  elasticsearch-data:
-    build:
-      context: elasticsearch/
-    hostname: elasticsearch-data
+  elasticsearch_data:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.1
+    hostname: elasticsearch_data
     ports:
       - "9200"
       - "9300"
-#    volumes:
-#      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - elk
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     environment:
-      node.name: elasticsearch-data
+      node.name: elasticsearch_data
       node.master: "false"
       node.data: "true"
       node.ingest: "true"
-      cluster.name: elasticsearch-cluster
       network.host: 0.0.0.0
-      discovery.zen.ping.unicast.hosts: elasticsearch-master,elasticsearch-data
+      cluster.name: elasticsearch_cluster
       discovery.zen.minimum_master_nodes: 2
-      xpack.security.enabled: "false"
-      path.data: /usr/share/elasticsearch/data
-      path.logs: /usr/share/elasticsearch/logs
+      discovery.zen.ping.unicast.hosts: elasticsearch_master
+      discovery.zen.ping_timeout: 30s
       MAX_LOCKED_MEMORY: unlimited
       ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-#    networks:
-#      - elk
     ulimits:
       memlock:
         soft: -1
         hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
     deploy:
       replicas: 3
-      resources:
-        limits:
-          memory: 3.4G
-        reservations:
-          memory: 3.4G
       update_config:
         parallelism: 1
         delay: 10s      
       restart_policy:
-        delay: 30s
-      placement:
-        constraints: [node.role == worker]
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+#      placement:
+#        constraints: [node.role == worker]
 #
 # O Kibana permite a criação de vizualizações e dashboards baseadas em buscas realizadas no elasticsearch.
 #
   kibana:
-    build:
-      context: kibana/
+    image: docker.elastic.co/kibana/kibana-oss:6.3.1
     hostname: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
     volumes:
       - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
     environment:
-      ELASTICSEARCH_HOST: "elasticsearch-master"
+      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
       ELASTICSEARCH_PORT: "9200"
-    ports:
-      - "5601:5601"
-#    networks:
-#      - elk
+      ELASTICSEARCH_HOST: "elasticsearch_master"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s      
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
     depends_on:
-      - elasticsearch-master
+      - elasticsearch_master
 #
 # O Logstash é o responsável por parsear os logs e enviar para o elasticsearch.
 #
   logstash:
-    build:
-      context: logstash/
+    image: docker.elastic.co/logstash/logstash-oss:6.3.1
     hostname: logstash
     command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+    networks:
+      - elk
     volumes:
       - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-    ports:
-      - "5044:5044"
     environment:
       LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-      ELASTICSEARCH_HOST: "elasticsearch-master"
       ELASTICSEARCH_PORT: "9200"
-#    networks:
-#      - elk
+      ELASTICSEARCH_HOST: "elasticsearch_master"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s      
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
     depends_on:
-      - elasticsearch-master
+      - elasticsearch_master
 ####################################################################################################
