@@ -1,22 +1,4 @@
 version: '3'
-<<<<<<< HEAD:meu/docker-compose.yml
-
-networks:
-  stack_elk:
-    driver: bridge
-
-services:
-
-  elasticsearch:
-    build:
-      context: elasticsearch/
-    privileged: true
-    hostname: elasticsearch
-    container_name: elasticsearch
-    restart: unless-stopped
-    volumes:
-      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-=======
 networks:
     elasticsearch_network:
     frontend:
@@ -33,7 +15,6 @@ services:
     container_name: elasticsearch_node_master
     image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
     hostname: elasticsearch_node_master
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -43,16 +24,6 @@ services:
       - elasticsearch_data_local_1:/usr/share/elasticsearch/data
       - ./elasticsearch/create-certs/certs:$CERTS_DIR_ELASTICSEARCH
     environment:
-<<<<<<< HEAD:meu/docker-compose.yml
-      ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-      CLUSTER_NAME: "elasticsearch_cluster"
-      NODE_MASTER: "true"
-      NODE_DATA: "true"
-      NETWORK_HOST: "0.0.0.0"
-      DISCOVERY_ZEN_MINIMUM_MASTER_NODES: "1"
-      DISCOVERY_ZEN_PING_TIMEOUT: "10s"
-      DISCOVERY_ZEN_PING_UNICAST_HOSTS: "elasticsearch"
-=======
       - "ES_JAVA_OPTS=-Xmx512m -Xms512m"
       - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
       - MAX_LOCKED_MEMORY=unlimited
@@ -74,7 +45,6 @@ services:
       - xpack.ssl.certificate_authorities=$CERTS_DIR_ELASTICSEARCH/ca/ca.crt
       - xpack.ssl.certificate=$CERTS_DIR_ELASTICSEARCH/elasticsearch_node_master/elasticsearch_node_master.crt
       - xpack.ssl.key=$CERTS_DIR_ELASTICSEARCH/elasticsearch_node_master/elasticsearch_node_master.key
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml
     ulimits:
       memlock:
         soft: -1
@@ -103,10 +73,6 @@ services:
       - "9200"
       - "9300"
     networks:
-<<<<<<< HEAD:meu/docker-compose.yml
-      - stack_elk
-
-=======
       - elasticsearch_network
     volumes:
       - elasticsearch_data_local_2:/usr/share/elasticsearch/data
@@ -153,7 +119,6 @@ services:
 #    command: /usr/bin/true
 #    depends_on: {"elasticsearch_node_master": {"condition": "service_healthy"}}
 #
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml
   kibana:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:6.2.4
@@ -161,34 +126,6 @@ services:
     ports:
       - "5601:5601"
     networks:
-<<<<<<< HEAD:meu/docker-compose.yml
-      - stack_elk
-    depends_on:
-      - elasticsearch
-
-  logstash:
-    build:
-      context: logstash/
-    privileged: true
-    hostname: logstash
-    container_name: logstash
-    restart: unless-stopped
-    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
-    volumes:
-      - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-    ports:
-      - "5044:5044"
-    environment:
-      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-      ELASTICSEARCH_HOST: "elasticsearch"
-      ELASTICSEARCH_PORT: "9200"
-    networks:
-      - stack_elk
-    depends_on:
-      - elasticsearch
-=======
       - elasticsearch_network
       - frontend
     volumes:
@@ -219,35 +156,3 @@ services:
        window: 120s
     depends_on:
       - elasticsearch_node_master
-#
-# O Logstash é o responsável por parsear os logs e enviar para o elasticsearch.
-#
-#  logstash:
-#    image: docker.elastic.co/logstash/logstash-oss:6.3.1
-#    hostname: logstash
-#    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
-#    ports:
-#      - "5044:5044"
-#    networks:
-#      - elk
-#    volumes:
-#      - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
-#      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-#      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-#    environment:
-#      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-#      ELASTICSEARCH_PORT: "9200"
-#      ELASTICSEARCH_HOST: "elasticsearch_master"
-#    deploy:
-#      replicas: 2
-#      update_config:
-#        parallelism: 1
-#        delay: 10s      
-#      restart_policy:
-#        condition: on-failure
-#        delay: 10s
-#        max_attempts: 3
-#        window: 120s
-#    depends_on:
-#      - elasticsearch_master
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml

@@ -1,29 +1,28 @@
-######################### Metricbeat Configuration ############################
+###################### Heartbeat Configuration ################################
 
-#==========================  Modules configuration ===========================#
+############################# Heartbeat #######################################
 
-metricbeat.config.modules:
-  # Glob pattern for configuration loading
-  path: ${path.config}/modules.d/*.yml
+# Configure monitors
+heartbeat.monitors:
+- type: http
 
-  # Set to true to enable config reloading
-  reload.enabled: true
+  # List or urls to query
+  urls: ["http://172.25.0.39:9200"]
 
-  # Period on which files under path should be checked for changes
-  reload.period: 10s
+  # Configure task schedule
+  schedule: '@every 10s'
 
-  # Maximum amount of time to randomly delay the start of a metricset. Use 0 to
-  # disable startup delay.
-  metricbeat.max_start_delay: 10s
+  # Total test connection and data exchange timeout
+  timeout: 10s
 
-#==================== Elasticsearch template setting ==========================
+#==================== Elasticsearch template setting =========================#
 
-#setup.template.settings:
-  #index.number_of_shards: 1
-  #index.codec: best_compression
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
   #_source.enabled: false
 
-#================================ General =====================================
+#================================ General ====================================#
 
 # The name of the shipper that publishes the network data. It can be used to group
 # all the transactions sent by a single shipper in the web interface.
@@ -38,7 +37,8 @@ metricbeat.config.modules:
 #fields:
 #  env: staging
 
-#============================== Dashboards =====================================
+
+#============================== Dashboards ===================================#
 # These settings control loading the sample dashboards to the Kibana index. Loading
 # the dashboards is disabled by default and can be enabled either by setting the
 # options here, or by using the `-setup` CLI flag or the `setup` command.
@@ -50,7 +50,7 @@ metricbeat.config.modules:
 # website.
 #setup.dashboards.url:
 
-#=============================== Kibana ======================================#
+#============================== Kibana =======================================#
 
 # Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
 # This requires a Kibana endpoint configuration.
@@ -62,9 +62,9 @@ setup.kibana:
   # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
   host: "${KIBANA_HOST}:${KIBANA_PORT}"
 
-#============================= Elastic Cloud ==================================
+#============================= Elastic Cloud =================================#
 
-# These settings simplify using metricbeat with the Elastic Cloud (https://cloud.elastic.co/).
+# These settings simplify using heartbeat with the Elastic Cloud (https://cloud.elastic.co/).
 
 # The cloud.id setting overwrites the `output.elasticsearch.hosts` and
 # `setup.kibana.host` options.
@@ -115,8 +115,8 @@ output.logstash:
 # "publish", "service".
 #logging.selectors: ["*"]
 
-#============================= Xpack Monitoring ==============================#
-# metricbeat can export internal metrics to a central Elasticsearch monitoring
+#============================== Xpack Monitoring =============================#
+# heartbeat can export internal metrics to a central Elasticsearch monitoring
 # cluster.  This requires xpack monitoring to be enabled in Elasticsearch.  The
 # reporting is disabled by default.
 

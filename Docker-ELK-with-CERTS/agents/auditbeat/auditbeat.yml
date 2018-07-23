@@ -1,29 +1,52 @@
-######################### Metricbeat Configuration ############################
+########################## Auditbeat Configuration ############################
 
 #==========================  Modules configuration ===========================#
+auditbeat.modules:
 
-metricbeat.config.modules:
-  # Glob pattern for configuration loading
-  path: ${path.config}/modules.d/*.yml
+- module: auditd
+  audit_rules: |
+    ## Define audit rules here.
+    ## Create file watches (-w) or syscall audits (-a or -A). Uncomment these
+    ## examples or add your own rules.
 
-  # Set to true to enable config reloading
-  reload.enabled: true
+    ## If you are on a 64 bit platform, everything should be running
+    ## in 64 bit mode. This rule will detect any use of the 32 bit syscalls
+    ## because this might be a sign of someone exploiting a hole in the 32
+    ## bit API.
+    -a always,exit -F arch=b32 -S all -F key=32bit-abi
 
-  # Period on which files under path should be checked for changes
-  reload.period: 10s
+    ## Executions.
+    -a always,exit -F arch=b64 -S execve,execveat -k exec
 
-  # Maximum amount of time to randomly delay the start of a metricset. Use 0 to
-  # disable startup delay.
-  metricbeat.max_start_delay: 10s
+    ## External access (warning: these can be expensive to audit).
+    -a always,exit -F arch=b64 -S accept,bind,connect -F key=external-access
 
-#==================== Elasticsearch template setting ==========================
+    ## Identity changes.
+    -w /etc/group -p wa -k identity
+    -w /etc/passwd -p wa -k identity
+    -w /etc/gshadow -p wa -k identity
 
-#setup.template.settings:
-  #index.number_of_shards: 1
+    ## Unauthorized access attempts.
+    -a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -k access
+    -a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -k access
+
+- module: file_integrity
+  paths:
+  - /bin
+  - /usr/bin
+  - /sbin
+  - /usr/sbin
+  - /etc
+
+
+
+#==================== Elasticsearch template setting =========================#
+setup.template.settings:
+  index.number_of_shards: 3
   #index.codec: best_compression
   #_source.enabled: false
 
-#================================ General =====================================
+#================================ General ====================================#
 
 # The name of the shipper that publishes the network data. It can be used to group
 # all the transactions sent by a single shipper in the web interface.
@@ -38,7 +61,8 @@ metricbeat.config.modules:
 #fields:
 #  env: staging
 
-#============================== Dashboards =====================================
+
+#============================== Dashboards ===================================#
 # These settings control loading the sample dashboards to the Kibana index. Loading
 # the dashboards is disabled by default and can be enabled either by setting the
 # options here, or by using the `-setup` CLI flag or the `setup` command.
@@ -50,7 +74,7 @@ metricbeat.config.modules:
 # website.
 #setup.dashboards.url:
 
-#=============================== Kibana ======================================#
+#============================== Kibana ========================================#
 
 # Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
 # This requires a Kibana endpoint configuration.
@@ -62,9 +86,9 @@ setup.kibana:
   # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
   host: "${KIBANA_HOST}:${KIBANA_PORT}"
 
-#============================= Elastic Cloud ==================================
+#============================= Elastic Cloud =================================#
 
-# These settings simplify using metricbeat with the Elastic Cloud (https://cloud.elastic.co/).
+# These settings simplify using beatname with the Elastic Cloud (https://cloud.elastic.co/).
 
 # The cloud.id setting overwrites the `output.elasticsearch.hosts` and
 # `setup.kibana.host` options.
@@ -115,8 +139,8 @@ output.logstash:
 # "publish", "service".
 #logging.selectors: ["*"]
 
-#============================= Xpack Monitoring ==============================#
-# metricbeat can export internal metrics to a central Elasticsearch monitoring
+#============================== Xpack Monitoring ==============================#
+# beatname can export internal metrics to a central Elasticsearch monitoring
 # cluster.  This requires xpack monitoring to be enabled in Elasticsearch.  The
 # reporting is disabled by default.
 
