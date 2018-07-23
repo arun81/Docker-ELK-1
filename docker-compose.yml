@@ -1,18 +1,11 @@
-####################################################################################################
-version: '3.6'
-#
-# Rede
-#
+version: '3'
+
 networks:
-  elk:
+  stack_elk:
     driver: bridge
 
-# Serviços ELK
-#
 services:
-#
-# O Elasticsearch é o servidor de busca distribuido que irá armazenar os logs.
-#
+
   elasticsearch:
     build:
       context: elasticsearch/
@@ -28,6 +21,8 @@ services:
     environment:
       ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
       CLUSTER_NAME: "elasticsearch-cluster"
+      NODE_MASTER: "true"
+      NODE_DATA: "true"
     ulimits:
       memlock:
         soft: -1
@@ -36,10 +31,8 @@ services:
         soft: 65536
         hard: 65536
     networks:
-      - elk
-#
-# O Kibana permite a criação de vizualizações e dashboards baseadas em buscas realizadas no elasticsearch.
-#
+      - stack_elk
+
   kibana:
     build:
       context: kibana/
@@ -55,12 +48,10 @@ services:
     ports:
       - "5601:5601"
     networks:
-      - elk
+      - stack_elk
     depends_on:
       - elasticsearch
-#
-# O Logstash é o responsável por parsear os logs e enviar para o elasticsearch.
-#
+
   logstash:
     build:
       context: logstash/
@@ -80,7 +71,6 @@ services:
       ELASTICSEARCH_HOST: "elasticsearch"
       ELASTICSEARCH_PORT: "9200"
     networks:
-      - elk
+      - stack_elk
     depends_on:
       - elasticsearch
-####################################################################################################
