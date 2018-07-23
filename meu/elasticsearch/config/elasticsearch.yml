@@ -1,0 +1,23 @@
+#
+# Cluster
+#
+cluster.name: "${CLUSTER_NAME:elasticsearch_cluster}"
+
+#
+# Node
+#
+node.name: "${HOSTNAME}"
+node.master: "${NODE_MASTER:true}"
+node.data: "${NODE_DATA:true}"
+
+#
+# Network
+#
+network.host: "${NETWORK_HOST:0.0.0.0}"
+
+#
+# Discovery
+#
+discovery.zen.minimum_master_nodes: "${DISCOVERY_ZEN_MINIMUM_MASTER_NODES:1}"
+discovery.zen.ping_timeout: "${DISCOVERY_ZEN_PING_TIMEOUT:10s}"
+discovery.zen.ping.unicast.hosts: "${DISCOVERY_ZEN_PING_UNICAST_HOSTS}"

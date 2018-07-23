@@ -20,9 +20,13 @@ services:
       - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-      CLUSTER_NAME: "elasticsearch-cluster"
+      CLUSTER_NAME: "elasticsearch_cluster"
       NODE_MASTER: "true"
       NODE_DATA: "true"
+      NETWORK_HOST: "0.0.0.0"
+      DISCOVERY_ZEN_MINIMUM_MASTER_NODES: "1"
+      DISCOVERY_ZEN_PING_TIMEOUT: "10s"
+      DISCOVERY_ZEN_PING_UNICAST_HOSTS: "elasticsearch"
     ulimits:
       memlock:
         soft: -1
