@@ -33,7 +33,6 @@ services:
     container_name: elasticsearch_node_master
     image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
     hostname: elasticsearch_node_master
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -43,7 +42,6 @@ services:
       - elasticsearch_data_local_1:/usr/share/elasticsearch/data
       - ./elasticsearch/create-certs/certs:$CERTS_DIR_ELASTICSEARCH
     environment:
-<<<<<<< HEAD:meu/docker-compose.yml
       ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
       CLUSTER_NAME: "elasticsearch_cluster"
       NODE_MASTER: "true"
@@ -52,7 +50,6 @@ services:
       DISCOVERY_ZEN_MINIMUM_MASTER_NODES: "1"
       DISCOVERY_ZEN_PING_TIMEOUT: "10s"
       DISCOVERY_ZEN_PING_UNICAST_HOSTS: "elasticsearch"
-=======
       - "ES_JAVA_OPTS=-Xmx512m -Xms512m"
       - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
       - MAX_LOCKED_MEMORY=unlimited
@@ -74,7 +71,6 @@ services:
       - xpack.ssl.certificate_authorities=$CERTS_DIR_ELASTICSEARCH/ca/ca.crt
       - xpack.ssl.certificate=$CERTS_DIR_ELASTICSEARCH/elasticsearch_node_master/elasticsearch_node_master.crt
       - xpack.ssl.key=$CERTS_DIR_ELASTICSEARCH/elasticsearch_node_master/elasticsearch_node_master.key
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml
     ulimits:
       memlock:
         soft: -1

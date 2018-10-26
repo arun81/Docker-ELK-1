@@ -1,0 +1,149 @@
+####################################################################################################
+version: '3'
+#
+# Rede
+#
+networks:
+    elk:
+# Serviços ELK
+#
+services:
+#
+# O Elasticsearch é o servidor de busca distribuido que irá armazenar os logs.
+#
+  elasticsearch_master:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.1
+    hostname: elasticsearch_master
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    environment:
+      node.name: elasticsearch_master
+      node.master: "true"
+      node.data: "false"
+      network.host: 0.0.0.0
+      cluster.name: elasticsearch_cluster
+      discovery.zen.minimum_master_nodes: 2
+      discovery.zen.ping.unicast.hosts: elasticsearch_master
+      discovery.zen.ping_timeout: 30s
+      MAX_LOCKED_MEMORY: unlimited
+      ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+#      placement:
+#        constraints: [node.role == manager]
+
+  elasticsearch_data:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.1
+    hostname: elasticsearch_data
+    ports:
+      - "9200"
+      - "9300"
+    networks:
+      - elk
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    environment:
+      node.name: elasticsearch_data
+      node.master: "false"
+      node.data: "true"
+      node.ingest: "true"
+      network.host: 0.0.0.0
+      cluster.name: elasticsearch_cluster
+      discovery.zen.minimum_master_nodes: 2
+      discovery.zen.ping.unicast.hosts: elasticsearch_master
+      discovery.zen.ping_timeout: 30s
+      MAX_LOCKED_MEMORY: unlimited
+      ES_JAVA_OPTS: "-Xmx1024m -Xms1024m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s      
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+#      placement:
+#        constraints: [node.role == worker]
+#
+# O Kibana permite a criação de vizualizações e dashboards baseadas em buscas realizadas no elasticsearch.
+#
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.3.1
+    hostname: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    environment:
+      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
+      ELASTICSEARCH_PORT: "9200"
+      ELASTICSEARCH_HOST: "elasticsearch_master"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s      
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+    depends_on:
+      - elasticsearch_master
+#
+# O Logstash é o responsável por parsear os logs e enviar para o elasticsearch.
+#
+  logstash:
+    image: docker.elastic.co/logstash/logstash-oss:6.3.1
+    hostname: logstash
+    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+    networks:
+      - elk
+    volumes:
+      - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
+      ELASTICSEARCH_PORT: "9200"
+      ELASTICSEARCH_HOST: "elasticsearch_master"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s      
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+#    depends_on:
+#      - elasticsearch_master
+####################################################################################################
