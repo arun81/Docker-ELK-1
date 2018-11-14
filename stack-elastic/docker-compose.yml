@@ -1,22 +1,6 @@
 ---
 version: '3.6'
 services:
-  # The environment variable "TAG" is used throughout this file to
-  # specify the version of the images to run. The default is set in the
-  # '.env' file in this folder. It can be overridden with any normal
-  # technique for setting environment variables, for example:
-  #
-  #   TAG=6.0.0-beta1 docker-compose up
-  #
-  # REF: https://docs.docker.com/compose/compose-file/#variable-substitution
-  #
-  # Also be sure to set the ELASTIC_VERSION variable. For released versions,
-  # ${TAG} and ${ELASTIC_VERSION} will be identical, but for pre-release
-  # versions, ${TAG} might contain an extra build identifier, like
-  # "6.0.0-beta1-3eab5b40", so a full invocation might look like:
-  #
-  #   ELASTIC_VERSION=6.0.0-beta1 TAG=6.0.0-beta1-3eab5b40 docker-compose up
-  #
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
     container_name: elasticsearch
@@ -88,7 +72,7 @@ services:
   auditbeat:
     image: docker.elastic.co/beats/auditbeat:${TAG}
     container_name: auditbeat
-    command: -e --strict.perms=false # -e flag to log to stderr and disable syslog/file output
+    command: -e --strict.perms=false # -e sinalizador para logar ao stderr e desabilitar saída de syslog / arquivo
     cap_add: ['AUDIT_CONTROL', 'AUDIT_READ']
     secrets:
       - source: auditbeat.yml
@@ -97,7 +81,7 @@ services:
         target: /usr/share/auditbeat/auditbeat.keystore
       - source: ca.crt
         target: /usr/share/auditbeat/certs/ca/ca.crt
-    # Auditbeat must run in the main process namespace.
+    # O Auditbeat deve ser executado no espaço de nomes do processo principal.
     pid: host
     volumes:
       - './scripts/setup-beat.sh:/usr/local/bin/setup-beat.sh:ro'
@@ -112,10 +96,10 @@ services:
   filebeat:
     image: docker.elastic.co/beats/filebeat:${TAG}
     container_name: filebeat
-    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
-    # If the host system has logs at "/var/log", mount them at "/mnt/log"
-    # inside the container, where Filebeat can find them.
-    # volumes: ['/var/log:/mnt/log:ro']
+    command: --strict.perms=false -e  # -e sinalizador para logar ao stderr e desabilitar saída de syslog / arquivo
+    # Se o sistema host tiver logs em "/var/log", monte-os em "/mnt/log"
+    # dentro do container, onde o Filebeat poderá encontrá-los.
+    # volumes: ['/var/log: /mnt/log:ro']
     secrets:
       - source: filebeat.yml
         target: /usr/share/filebeat/filebeat.yml
@@ -136,7 +120,7 @@ services:
   heartbeat:
     image: docker.elastic.co/beats/heartbeat:${TAG}
     container_name: heartbeat
-    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    command: --strict.perms=false -e  # -e sinalizador para logar ao stderr e desabilitar saída de syslog / arquivo
     secrets:
       - source: heartbeat.yml
         target: /usr/share/heartbeat/heartbeat.yml
@@ -157,15 +141,15 @@ services:
   metricbeat:
     image: docker.elastic.co/beats/metricbeat:${TAG}
     container_name: metricbeat
-    # The commented sections below enable Metricbeat to monitor the Docker host,
-    # rather than the Metricbeat container. It's problematic with Docker for
-    # Windows, however, since "/proc", "/sys" etc. don't exist on Windows.
-    # The same likely applies to OSX (needs testing).
+    # As seções comentadas abaixo permitem que o Metricbeat monitore o host do Docker,
+    # em vez do contêiner do Metricbeat. É problemático com o Docker para
+    # Windows, no entanto, desde "/proc", "/sys" etc. não existem em Windows.
+    # O mesmo se aplica ao OSX (teste de necessidades).
     # volumes:
     #   - /proc:/hostfs/proc:ro
     #   - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
     #   - /:/hostfs:ro
-    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    command: --strict.perms=false -e  # -e sinalizador para logar ao stderr e desabilitar saída de syslog / arquivo
     secrets:
       - source: metricbeat.yml
         target: /usr/share/metricbeat/metricbeat.yml
@@ -186,20 +170,20 @@ services:
   packetbeat:
     image: docker.elastic.co/beats/packetbeat:${TAG}
     container_name: packetbeat
-    # Packetbeat needs some elevated privileges to capture network traffic.
-    # We'll grant them with POSIX capabilities.
+    # O Packetbeat precisa de alguns privilégios elevados para capturar o tráfego de rede.
+    # Nós os concederemos com recursos POSIX.
     cap_add: ['NET_RAW', 'NET_ADMIN']
-    # Use "host mode" networking to allow Packetbeat to capture traffic from
-    # the real network interface on the host, rather than being isolated to the
-    # container's virtual interface.
+    # Use a rede "modo host" para permitir que o Packetbeat capture tráfego de
+    # a interface de rede real no host, em vez de ser isolado para o interface virtual do
+    # containerer.
     network_mode: host
-    # Since we did that, Packetbeat is not part of the "stack" Docker network
-    # that the other containers are connected to, and thus can't resolve the
-    # hostname "elasticsearch". Instead, we'll tell it to find Elasticsearch
-    # on "localhost", which is the Docker host machine in this context.
+    # Desde que fizemos isso, o Packetbeat não faz parte da rede Docker "stack"
+    # que os outros contêineres estejam conectados e, portanto, não consigam resolver
+    # hostname "elasticsearch". Em vez disso, vamos dizer para encontrar o Elasticsearch
+    # on "localhost", que é a máquina host do Docker neste contexto.
     command: -e -E 'output.elasticsearch.hosts=["localhost:9200"]'
     depends_on: ['elasticsearch']
-    command: --strict.perms=false -e -E output.elasticsearch.hosts="https://localhost:9200" # -e flag to log to stderr and disable syslog/file output
+    command: --strict.perms=false -e -E output.elasticsearch.hosts="https://localhost:9200" # -e sinalizador para logar ao stderr e desabilitar saída de syslog / arquivo
     secrets:
       - source: packetbeat.yml
         target: /usr/share/packetbeat/packetbeat.yml
@@ -221,7 +205,7 @@ services:
     container_name: apm_server
     ports: ['8200:8200']
     networks: ['stack']
-    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    command: --strict.perms=false -e  # -e sinalizador para logar ao stderr e desabilitar saída de syslog / arquivo
     secrets:
       - source: apm-server.yml
         target: /usr/share/apm-server/apm-server.yml
@@ -239,7 +223,7 @@ services:
       retries: 5
 
 networks: {stack: {}}
-# use docker volume to persist ES data outside of a container.
+# use o volume docker para persistir os dados ES fora de um contêiner.
 volumes:
   es_data:
 

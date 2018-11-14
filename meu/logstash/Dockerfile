@@ -7,6 +7,7 @@ FROM docker.elastic.co/logstash/logstash-oss:6.3.1
 RUN logstash-plugin install \
 	# Input
 	logstash-input-beats \
+	logstash-input-jdbc \
 	# Output
 	logstash-output-gelf \
 	# Filter

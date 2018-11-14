@@ -1,43 +1,18 @@
 version: '3'
-<<<<<<< HEAD:meu/docker-compose.yml
-
 networks:
   stack_elk:
     driver: bridge
-
-services:
-
-  elasticsearch:
-    build:
-      context: elasticsearch/
-    privileged: true
-    hostname: elasticsearch
-    container_name: elasticsearch
-    restart: unless-stopped
-    volumes:
-      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-=======
-networks:
-    elasticsearch_network:
-    frontend:
-volumes:
-  elasticsearch_data_local_1:
-    driver: local
-  elasticsearch_data_local_2:
-    driver: local
 services:
 #
 # O Elasticsearch é o servidor de busca distribuido que irá armazenar os logs.
 #
   elasticsearch_node_master:
-    container_name: elasticsearch_node_master
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
-    hostname: elasticsearch_node_master
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
     ports:
       - "9200:9200"
       - "9300:9300"
     networks:
-      - elasticsearch_network
+      - stack_elk
     volumes:
       - elasticsearch_data_local_1:/usr/share/elasticsearch/data
       - ./elasticsearch/create-certs/certs:$CERTS_DIR_ELASTICSEARCH
@@ -93,17 +68,13 @@ services:
 
   elasticsearch_node_worker:
     container_name: elasticsearch_node_worker
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
     hostname: elasticsearch_node_worker
     ports:
       - "9200"
       - "9300"
     networks:
-<<<<<<< HEAD:meu/docker-compose.yml
       - stack_elk
-
-=======
-      - elasticsearch_network
     volumes:
       - elasticsearch_data_local_2:/usr/share/elasticsearch/data
       - ./elasticsearch/create-certs/certs:$CERTS_DIR_ELASTICSEARCH
@@ -144,106 +115,46 @@ services:
         max_attempts: 3
         window: 120s
 #
-#  wait_until_ready:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
-#    command: /usr/bin/true
-#    depends_on: {"elasticsearch_node_master": {"condition": "service_healthy"}}
+# O Kibana permite a criação de vizualizações e dashboards baseadas em buscas realizadas no elasticsearch.
 #
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml
   kibana:
     container_name: kibana
-    image: docker.elastic.co/kibana/kibana:6.2.4
+    image: docker.elastic.co/kibana/kibana:${TAG}
     hostname: kibana
     ports:
       - "5601:5601"
     networks:
-<<<<<<< HEAD:meu/docker-compose.yml
       - stack_elk
-    depends_on:
-      - elasticsearch
-
-  logstash:
-    build:
-      context: logstash/
-    privileged: true
-    hostname: logstash
-    container_name: logstash
-    restart: unless-stopped
-    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
-    volumes:
-      - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-    ports:
-      - "5044:5044"
-    environment:
-      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-      ELASTICSEARCH_HOST: "elasticsearch"
-      ELASTICSEARCH_PORT: "9200"
-    networks:
-      - stack_elk
-    depends_on:
-      - elasticsearch
-=======
-      - elasticsearch_network
-      - frontend
-    volumes:
-      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
-      - ./elasticsearch/create-certs/certs/kibana:$CERTS_DIR_KIBANA
-    environment:
-      - "LS_JAVA_OPTS=-Xmx512m -Xms512m"
-#      - SERVER_NAME=kibana
-#      - SERVER_HOST=0.0.0.0
-#      - XPACK_MONITORING_ENABLED=true
-#      - ELASTICSEARCH_USERNAME=elastic
-#      - ELASTICSEARCH_PASSWORD=$KIBANA_PASSWORD
-      - ELASTICSEARCH_URL=https://elasticsearch_node_master:9200
-#      - xpack.monitoring.ui.container.elasticsearch.enabled=true
-#      - xpack.security.sessionTimeout=600000
-#      - server.ssl.enabled=true
-#      - server.ssl.key=$CERTS_DIR_KIBANA/kibana.key
-#      - server.ssl.certificate=$CERTS_DIR_KIBANA/kibana.crt
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-       condition: on-failure
-       delay: 10s
-       max_attempts: 3
-       window: 120s
     depends_on:
       - elasticsearch_node_master
 #
 # O Logstash é o responsável por parsear os logs e enviar para o elasticsearch.
 #
-#  logstash:
-#    image: docker.elastic.co/logstash/logstash-oss:6.3.1
-#    hostname: logstash
-#    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
-#    ports:
-#      - "5044:5044"
-#    networks:
-#      - elk
-#    volumes:
-#      - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
-#      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-#      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-#    environment:
-#      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
-#      ELASTICSEARCH_PORT: "9200"
-#      ELASTICSEARCH_HOST: "elasticsearch_master"
-#    deploy:
-#      replicas: 2
-#      update_config:
-#        parallelism: 1
-#        delay: 10s      
-#      restart_policy:
-#        condition: on-failure
-#        delay: 10s
-#        max_attempts: 3
-#        window: 120s
-#    depends_on:
-#      - elasticsearch_master
->>>>>>> 769fe857836167ed691f38329594b110db96cc1f:docker-compose.yml
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${TAG}
+    hostname: logstash
+    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+    networks:
+      - stack_elk
+    volumes:
+      - ./logstash/patterns/default.conf:/opt/logstash/patterns/default.conf
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      LS_JAVA_OPTS: "-Xmx1024m -Xms1024m"
+      ELASTICSEARCH_PORT: "9200"
+      ELASTICSEARCH_HOST: "elasticsearch_node_master"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s      
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+    depends_on:
+      - elasticsearch_node_master
