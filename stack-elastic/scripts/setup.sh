@@ -14,7 +14,7 @@ export ELASTIC_PASSWORD
 docker-compose -f docker-compose.yml -f docker-compose.setup.yml up setup_elasticsearch
 
 # restart Elasticsearch so CA's take effect.
-docker restart elasticsearch
+docker restart setup_elasticsearch
 
 # setup kibana and logstash (and system passwords)
 docker-compose -f docker-compose.yml -f docker-compose.setup.yml up setup_kibana setup_logstash

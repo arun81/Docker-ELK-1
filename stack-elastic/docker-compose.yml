@@ -18,7 +18,7 @@ services:
     ports: ['9200:9200']
     networks: ['stack']
     volumes:
-      - 'es_data:/usr/share/elasticsearch/data'
+      - 'elasticsearch_data:/usr/share/elasticsearch/data'
       - './scripts/setup-users.sh:/usr/local/bin/setup-users.sh:ro'
     healthcheck:
       test: curl --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
@@ -223,9 +223,9 @@ services:
       retries: 5
 
 networks: {stack: {}}
-# use o volume docker para persistir os dados ES fora de um contêiner.
+
 volumes:
-  es_data:
+  elasticsearch_data:
 
 secrets:
   ca.crt:
